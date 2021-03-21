@@ -5,6 +5,11 @@
 #include <time.h>
 using namespace std;
 
+/*
+$ g++ -std=c++17 main.cpp
+$ ./a.exe < DES-Key-Plaintext.txt > out.txt
+*/
+
 int PC_1[] = {57, 49,  41, 33, 25, 17,  9,
               1 , 58,  50, 42, 34, 26,  18,
               10, 2 ,  59, 51, 43, 35,  27,
@@ -156,15 +161,14 @@ string DES(string key, string plaintext)
     plaintext = string_to_binary_ascii(plaintext);
     string K[16] = "";
     generate_subkeys(K,key);
-    string M = plaintext;
-    string Mp = "";
+    string plaintext_p = "";
     for(int i=0;i<64;++i)
-        Mp += M[IP[i]];
+        plaintext_p += plaintext[IP[i]];
 
     string L[17] = "";
     string R[17] = "";
-    L[0] = Mp.substr(0,32);
-    R[0] = Mp.substr(32,32);
+    L[0] = plaintext_p.substr(0,32);
+    R[0] = plaintext_p.substr(32,32);
 
 
     for(int i=1;i<17;++i)
@@ -206,20 +210,11 @@ string binarystring_to_hex(string &a)
     for(auto &it : arr)
     {
         int num = binarystring_to_int(it);
+        string dict[] = {"A","B","C","D","E","F"};
         if(num < 10)
             ans += to_string(num);
-        else if(num == 10)
-            ans += "A";
-        else if(num == 11)
-            ans += "B";
-        else if(num == 12)
-            ans += "C";
-        else if(num == 13)
-            ans += "D";
-        else if(num == 14)
-            ans += "E";
-        else if(num == 15)
-            ans += "F";
+        else if(num >= 10)
+            ans += dict[num-10];
     }
     return ans;
 }
@@ -233,19 +228,29 @@ int main()
     string key = "12345678";
     string plaintext = "Advanced";
 
-    while(cin >> key >> plaintext)
+    double cpu_time_used = 0;
+    int cnt = 0;
+    string input = "";
+    while(getline(cin,input))
     {
-        clock_t start, end;
-        double cpu_time_used;
-        start = clock();
+        string answer = "";
+        for(int i=0;i<100;++i)
+        {
+            key = input.substr(0,8);
+            plaintext = input.substr(9,8);
+            clock_t start, end;
+            //cout << key << " " <<  plaintext <<endl;
+            start = clock();
 
-        string ciphertext = DES(key,plaintext);
-        string answer = binarystring_to_hex(ciphertext);
+            string ciphertext = DES(key,plaintext);
+            answer = binarystring_to_hex(ciphertext);
 
+            end = clock();
+            cpu_time_used += ((double) (end - start)) / CLOCKS_PER_SEC;
+            ++cnt;
+        }
+        cout << answer << endl;
 
-        end = clock();
-        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-        cout << answer << "\ncpu_time_used: " << cpu_time_used << endl;
     }
+    cout << "average cpu time used : " << cpu_time_used/cnt <<endl;
 }
